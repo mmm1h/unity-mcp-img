@@ -34,11 +34,8 @@ docker run -i --rm ghcr.io/mmm1h/unity-mcp-server:latest
 
 # Run with HTTP transport (Expose port 8080)
 docker run -d -p 8080:8080 --name unity-mcp-server \
-  -e TRANSPORT=http \
-  -e HTTP_HOST=0.0.0.0 \
-  -e HTTP_PORT=8080 \
-  -e UNITY_EDITOR_URL=http://<NAS_IP_OR_HOST>:8080 \
-  ghcr.io/mmm1h/unity-mcp-server:latest
+  ghcr.io/mmm1h/unity-mcp-server:latest \
+  --transport http --http-host 0.0.0.0 --http-port 8080
 ```
 
 #### 2. Docker Compose
@@ -53,15 +50,20 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    environment:
-      - TRANSPORT=http
-      - HTTP_HOST=0.0.0.0
-      - HTTP_PORT=8080
-      - UNITY_EDITOR_URL=http://<YOUR_UNITY_EDITOR_IP>:8080
+    command: ["--transport", "http", "--http-host", "0.0.0.0", "--http-port", "8080"]
 ```
 
 ---
 
-### 🛡️ Security Best Practices
-* **No Secrets in Images**: The built Docker image contains only the clean `mcp-for-unity` server.
-* **External Runtime Configuration**: Pass all sensitive keys, ports, and external connection URLs via environment variables (`docker-compose.yml` or `.env` files) on your NAS.
+### 🛡️ Configuration & Environment Variables
+The server connects to the Unity Editor automatically when both are running. You can configure it via optional environment variables or CLI flags:
+
+* **Environment Variables**:
+  * `LOG_LEVEL=DEBUG` - Enable detailed logging (default: `INFO`).
+  * `DISABLE_TELEMETRY=true` - Opt out of anonymous usage analytics.
+
+* **CLI Flags** (passed as docker command arguments):
+  * `--transport {stdio,http}` - Transport protocol (default: `stdio`).
+  * `--http-host HOST` - Override HTTP bind host (e.g. `0.0.0.0`).
+  * `--http-port PORT` - Override HTTP bind port (e.g. `8080`).
+  * `--http-remote-hosted` - Treat HTTP transport as remotely hosted (requires external API key validation).

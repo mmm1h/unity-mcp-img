@@ -27,14 +27,15 @@ docker pull ghcr.io/mmm1h/unity-mcp-server:latest
 docker pull ghcr.io/mmm1h/unity-mcp-server:v9.6.8
 ```
 
-运行容器（以 HTTP 传输为例）：
+运行容器：
 ```bash
+# 默认 stdio 传输模式（兼容 Docker MCP Gateway 模式）
+docker run -i --rm ghcr.io/mmm1h/unity-mcp-server:latest
+
+# HTTP 传输模式（映射 8080 端口）
 docker run -d -p 8080:8080 --name unity-mcp-server \
-  -e TRANSPORT=http \
-  -e HTTP_HOST=0.0.0.0 \
-  -e HTTP_PORT=8080 \
-  -e UNITY_EDITOR_URL=http://<您的NAS或宿主机IP>:8080 \
-  ghcr.io/mmm1h/unity-mcp-server:latest
+  ghcr.io/mmm1h/unity-mcp-server:latest \
+  --transport http --http-host 0.0.0.0 --http-port 8080
 ```
 
 #### 2. Docker Compose 配置
@@ -49,15 +50,18 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    environment:
-      - TRANSPORT=http
-      - HTTP_HOST=0.0.0.0
-      - HTTP_PORT=8080
-      - UNITY_EDITOR_URL=http://<您的UNITY编辑器运行IP>:8080
+    command: ["--transport", "http", "--http-host", "0.0.0.0", "--http-port", "8080"]
 ```
 
----
+### 🛡️ 配置与环境变量
+只要 Unity 编辑器和本服务同时运行，服务会自动与其建立连接。您可以通过以下可选的环境变量或 CLI 命令行参数对其进行配置：
 
-### 🛡️ 安全提示
-* **镜像完全无害**：构建出的镜像仅负责打包上游服务端运行环境，绝不包含任何敏感密钥、外部连接或凭证。
-* **运行时配置**：请务必在 NAS 的部署环境（如 `docker-compose` 或环境变量配置）中提供具体的 Token、API Key 和外部连接信息。
+* **环境变量**：
+  * `LOG_LEVEL=DEBUG` - 开启详细的调试日志（默认：`INFO`）。
+  * `DISABLE_TELEMETRY=true` - 禁用匿名遥测与使用数据分析。
+
+* **CLI 命令行参数**（在 docker 容器启动命令的末尾传入）：
+  * `--transport {stdio,http}` - 传输协议类型（默认：`stdio`）。
+  * `--http-host HOST` - 覆盖 HTTP 绑定监听地址（例如 `0.0.0.0`）。
+  * `--http-port PORT` - 覆盖 HTTP 绑定监听端口（例如 `8080`）。
+  * `--http-remote-hosted` - 将 HTTP 传输视为远程托管服务（此模式下需要外部 API Key 验证服务）。
