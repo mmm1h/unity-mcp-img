@@ -73,19 +73,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 始终获取上游仓库真实的最新 Release 版本
+          REAL_LATEST_TAG=$(gh api repos/CoplayDev/unity-mcp/releases/latest --jq .tag_name)
+          if [ -z "$REAL_LATEST_TAG" ] || [ "$REAL_LATEST_TAG" = "null" ]; then
+            echo "Error: Failed to fetch the latest release tag from upstream repository." >&2
+            exit 1
+          fi
+          echo "REAL_LATEST_TAG=$REAL_LATEST_TAG" >> $GITHUB_ENV
+          echo "Real upstream latest release: $REAL_LATEST_TAG"
+
           INPUT_VERSION="${{ inputs.version }}"
           if [ -n "$INPUT_VERSION" ]; then
             echo "Using manually specified version: $INPUT_VERSION"
             echo "VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           else
-            echo "No version specified. Querying the latest release from CoplayDev/unity-mcp..."
-            LATEST_TAG=$(gh api repos/CoplayDev/unity-mcp/releases/latest --jq .tag_name)
-            if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-              echo "Error: Failed to fetch the latest release tag from upstream repository." >&2
-              exit 1
-            fi
-            echo "Found latest upstream release: $LATEST_TAG"
-            echo "VERSION=$LATEST_TAG" >> $GITHUB_ENV
+            echo "No version specified. Resolving to latest release: $REAL_LATEST_TAG"
+            echo "VERSION=$REAL_LATEST_TAG" >> $GITHUB_ENV
           fi
 
       - name: Check if image tag already exists in GHCR
@@ -113,6 +116,23 @@ jobs:
             echo "Build will proceed. (EXISTS=${{ env.EXISTS }}, FORCE_BUILD=$FORCE_BUILD)"
           fi
 
+      - name: Resolve Pushed Tags
+        if: env.SKIP_BUILD != 'true'
+        run: |
+          TAGS="${{ env.IMAGE_NAME }}:${{ env.VERSION }}"
+          if [ "${{ env.VERSION }}" = "${{ env.REAL_LATEST_TAG }}" ]; then
+            echo "Building the latest version. Including 'latest' tag..."
+            TAGS="${TAGS}
+${{ env.IMAGE_NAME }}:latest"
+          else
+            echo "Building a non-latest or historical version (${{ env.VERSION }}). Excluding 'latest' tag to avoid overwriting!"
+          fi
+          
+          # 写入多行全局环境变量，使用 EOF 块定义
+          echo "RESOLVED_TAGS<<EOF" >> $GITHUB_ENV
+          echo "$TAGS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Checkout upstream repository
         if: env.SKIP_BUILD != 'true'
         uses: actions/checkout@v4
@@ -129,9 +149,7 @@ jobs:
           file: Server/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-            ${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.RESOLVED_TAGS }}
           # 启用 GitHub Actions 缓存以加快后续构建速度并减少资源消耗
           cache-from: type=gha
           cache-to: type=gha,mode=max
