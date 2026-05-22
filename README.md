@@ -1,10 +1,15 @@
-# unity-mcp-server-sync
+# unity-mcp-img
 
 [中文版 (Chinese Version)](./README_zh.md)
 
 ---
 
-Automated GitHub Actions workflow repository to build and publish the `CoplayDev/unity-mcp` Server Docker image to GitHub Container Registry (GHCR).
+This repository provides an automated GitHub Actions workflow to build and publish the official [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) Server Docker image to GitHub Container Registry (GHCR).
+
+### 🌟 About the Upstream Project
+[CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) (MCP for Unity) is an incredible tool that bridges AI assistants (like Claude, Cursor, Claude Code, and VS Code) with your Unity Editor via the Model Context Protocol (MCP). It equips LLMs with tools to manage assets, control scenes, edit scripts, and automate workflows in Unity.
+
+This companion repository (`unity-mcp-img`) simplifies the server's deployment by automatically packaging its HTTP/stdio runtime into a highly optimized, lightweight Docker container, making it extremely easy to host on a NAS, server, or local environment.
 
 ### 🚀 Features
 * **Daily Auto-Sync**: Automatically runs daily (at 00:00 UTC) to fetch the latest release of [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) and build it.
