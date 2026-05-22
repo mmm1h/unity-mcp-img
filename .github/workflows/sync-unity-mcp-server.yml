@@ -38,6 +38,10 @@ on:
         type: boolean
         default: false
 
+# 全局环境变量：强制将 JavaScript Actions 运行在 Node.js 24 环境，消除 Node.js 20 弃用警告
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 # 最小化工作流权限，仅授予读取本仓内容和向 GHCR 写入 Package 的权限
 permissions:
   contents: read
