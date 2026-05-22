@@ -122,8 +122,7 @@ jobs:
           TAGS="${{ env.IMAGE_NAME }}:${{ env.VERSION }}"
           if [ "${{ env.VERSION }}" = "${{ env.REAL_LATEST_TAG }}" ]; then
             echo "Building the latest version. Including 'latest' tag..."
-            TAGS="${TAGS}
-${{ env.IMAGE_NAME }}:latest"
+            TAGS=$(printf "%s\n%s" "$TAGS" "${{ env.IMAGE_NAME }}:latest")
           else
             echo "Building a non-latest or historical version (${{ env.VERSION }}). Excluding 'latest' tag to avoid overwriting!"
           fi
