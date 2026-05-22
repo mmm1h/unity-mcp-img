@@ -2,20 +2,23 @@
 # GitHub Actions Workflow: 自动构建与同步 unity-mcp Server 镜像
 # ==============================================================================
 #
-# 📌 镜像推送目标：ghcr.io/<当前仓库owner>/unity-mcp-server
+# 📌 镜像推送目标：
+#   ghcr.io/<当前仓库owner>/unity-mcp-server
 # 
 # 📝 标签（Tag）说明与最佳实践：
 #   1. 固定版本 tag（例如 v9.6.8）：
 #      - 表示当前自动构建到的特定上游 Release 版本。
-#      - 强烈建议在 NAS 生产环境中使用固定版本 tag，以追求极致的安全与稳定，避免自动升级带来的不兼容问题。
+#      - 强烈建议在 NAS 生产环境中使用固定版本 tag，
+#        以追求极致的安全与稳定，避免自动升级带来的不兼容问题。
 #   2. "latest" tag：
 #      - 由本 workflow 维护的“我们自己构建仓库中的最新上游 release 镜像”。
 #      - 适合测试环境，或希望无缝自动跟随上游更新的用户。
 # 
 # 🛡️ 安全合规说明：
-#   - 镜像本身仅负责打包 mcp-for-unity server 运行时环境，绝不包含任何运行时敏感信息。
-#   - 任何运行时参数（如 n8n URL、API Key、Service Token、MCPHub 地址等）必须通过 NAS 上的
-#     docker-compose.yml 或 .env 环境变量提供。
+#   - 镜像本身仅负责打包 mcp-for-unity server 运行时环境，
+#     绝不包含任何运行时敏感信息。
+#   - 任何运行时参数必须通过 NAS 上的 docker-compose.yml 
+#     或 .env 环境变量提供。
 #
 # ==============================================================================
 
@@ -28,12 +31,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Target version/tag from CoplayDev/unity-mcp to build (e.g., v9.6.8). Leave empty for latest release.'
+        description: >
+          Target version/tag from CoplayDev/unity-mcp to build (e.g., v9.6.8).
+          Leave empty for latest release.
         required: false
         type: string
         default: ''
       force:
-        description: 'Force rebuild and push even if the image version tag already exists in GHCR.'
+        description: >
+          Force rebuild and push even if the image version tag
+          already exists in GHCR.
         required: false
         type: boolean
         default: false
@@ -73,22 +80,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 始终获取上游仓库真实的最新 Release 版本
-          REAL_LATEST_TAG=$(gh api repos/CoplayDev/unity-mcp/releases/latest --jq .tag_name)
-          if [ -z "$REAL_LATEST_TAG" ] || [ "$REAL_LATEST_TAG" = "null" ]; then
+          # 始终获取上游仓库真实的最新 Release 版本作为 UPSTREAM_LATEST_TAG
+          UPSTREAM_LATEST_TAG=$(gh api repos/CoplayDev/unity-mcp/releases/latest --jq .tag_name)
+          if [ -z "$UPSTREAM_LATEST_TAG" ] || [ "$UPSTREAM_LATEST_TAG" = "null" ]; then
             echo "Error: Failed to fetch the latest release tag from upstream repository." >&2
             exit 1
           fi
-          echo "REAL_LATEST_TAG=$REAL_LATEST_TAG" >> $GITHUB_ENV
-          echo "Real upstream latest release: $REAL_LATEST_TAG"
+          echo "UPSTREAM_LATEST_TAG=$UPSTREAM_LATEST_TAG" >> $GITHUB_ENV
+          echo "Real upstream latest release: $UPSTREAM_LATEST_TAG"
 
           INPUT_VERSION="${{ inputs.version }}"
           if [ -n "$INPUT_VERSION" ]; then
             echo "Using manually specified version: $INPUT_VERSION"
             echo "VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           else
-            echo "No version specified. Resolving to latest release: $REAL_LATEST_TAG"
-            echo "VERSION=$REAL_LATEST_TAG" >> $GITHUB_ENV
+            echo "No version specified. Resolving to latest release: $UPSTREAM_LATEST_TAG"
+            echo "VERSION=$UPSTREAM_LATEST_TAG" >> $GITHUB_ENV
           fi
 
       - name: Check if image tag already exists in GHCR
@@ -120,15 +127,16 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         run: |
           TAGS="${{ env.IMAGE_NAME }}:${{ env.VERSION }}"
-          if [ "${{ env.VERSION }}" = "${{ env.REAL_LATEST_TAG }}" ]; then
+          if [ "${{ env.VERSION }}" = "${{ env.UPSTREAM_LATEST_TAG }}" ]; then
             echo "Building the latest version. Including 'latest' tag..."
             TAGS=$(printf "%s\n%s" "$TAGS" "${{ env.IMAGE_NAME }}:latest")
           else
-            echo "Building a non-latest or historical version (${{ env.VERSION }}). Excluding 'latest' tag to avoid overwriting!"
+            echo "Building a historical version (${{ env.VERSION }})."
+            echo "Excluding 'latest' tag to avoid overwriting!"
           fi
           
-          # 写入多行全局环境变量，使用 EOF 块定义
-          echo "RESOLVED_TAGS<<EOF" >> $GITHUB_ENV
+          # 写入多行全局环境变量，使用 EOF 块定义 DOCKER_TAGS
+          echo "DOCKER_TAGS<<EOF" >> $GITHUB_ENV
           echo "$TAGS" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
@@ -143,12 +151,13 @@ jobs:
         if: env.SKIP_BUILD != 'true'
         uses: docker/build-push-action@v6
         with:
-          # 注意：上游 Server/Dockerfile 中含有 "COPY . /app"，所以构建上下文（context）必须是仓库根目录，而不能是 Server 目录。
+          # 注意：上游 Server/Dockerfile 中含有 "COPY . /app"，
+          # 所以构建上下文（context）必须是仓库根目录，而不能是 Server 目录。
           context: .
           file: Server/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ env.RESOLVED_TAGS }}
+          tags: ${{ env.DOCKER_TAGS }}
           # 启用 GitHub Actions 缓存以加快后续构建速度并减少资源消耗
           cache-from: type=gha
           cache-to: type=gha,mode=max

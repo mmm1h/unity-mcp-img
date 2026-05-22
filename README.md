@@ -4,19 +4,34 @@
 
 ---
 
-This repository provides an automated GitHub Actions workflow to build and publish the official [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) Server Docker image to GitHub Container Registry (GHCR).
+This repository provides an automated GitHub Actions workflow to build and
+publish the official [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp)
+Server Docker image to GitHub Container Registry (GHCR).
 
 ### 🌟 About the Upstream Project
-[CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) (MCP for Unity) is an incredible tool that bridges AI assistants (like Claude, Cursor, Claude Code, and VS Code) with your Unity Editor via the Model Context Protocol (MCP). It equips LLMs with tools to manage assets, control scenes, edit scripts, and automate workflows in Unity.
+[CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) (MCP for Unity)
+is an incredible tool that bridges AI assistants (like Claude, Cursor, Claude Code,
+and VS Code) with your Unity Editor via the Model Context Protocol (MCP). It
+equips LLMs with tools to manage assets, control scenes, edit scripts, and
+automate workflows in Unity.
 
-This companion repository (`unity-mcp-img`) simplifies the server's deployment by automatically packaging its HTTP/stdio runtime into a highly optimized, lightweight Docker container, making it extremely easy to host on a NAS, server, or local environment.
+This companion repository (`unity-mcp-img`) simplifies the server's deployment
+by automatically packaging its HTTP/stdio runtime into a highly optimized,
+lightweight Docker container, making it extremely easy to host on a NAS, server,
+or local environment.
 
 ### 🚀 Features
-* **Daily Auto-Sync**: Automatically runs daily (at 00:00 UTC) to fetch the latest release of [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) and build it.
-* **Smart Rebuild Skipping**: Automatically queries GHCR before building. If the target version image already exists, it skips the build to save Actions minutes.
-* **Manual Control**: Supports manual trigger (`workflow_dispatch`) with optional `version` specification and a `force` rebuild option.
-* **Node.js 24 Ready**: Optimized with `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` to ensure long-term stability and compatibility with GitHub runner updates.
-* **Dual Tags**: Pushes both the version tag (e.g., `v9.6.8`) and the `latest` tag representing the latest built release.
+* **Daily Auto-Sync**: Automatically runs daily (at 00:00 UTC) to fetch the
+  latest release of [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp)
+  and build it.
+* **Smart Rebuild Skipping**: Automatically queries GHCR before building. If the
+  target version image already exists, it skips the build to save Actions minutes.
+* **Manual Control**: Supports manual trigger (`workflow_dispatch`) with
+  optional `version` specification and a `force` rebuild option.
+* **Node.js 24 Ready**: Optimized with `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` to
+  ensure long-term stability and compatibility with GitHub runner updates.
+* **Dual Tags**: Pushes both the version tag (e.g., `v9.6.8`) and the `latest`
+  tag representing the latest built release.
 
 ---
 
@@ -50,7 +65,8 @@ version: '3.8'
 
 services:
   unity-mcp-server:
-    image: ghcr.io/mmm1h/unity-mcp-server:latest # Use specific version like :v9.6.8 for production stability
+    # Use specific version like :v9.6.8 for production stability
+    image: ghcr.io/mmm1h/unity-mcp-server:latest
     container_name: unity-mcp-server
     restart: always
     ports:
@@ -61,7 +77,8 @@ services:
 ---
 
 ### 🛡️ Configuration & Environment Variables
-The server connects to the Unity Editor automatically when both are running. You can configure it via optional environment variables or CLI flags:
+The server connects to the Unity Editor automatically when both are running. You
+can configure it via optional environment variables or CLI flags:
 
 * **Environment Variables**:
   * `LOG_LEVEL=DEBUG` - Enable detailed logging (default: `INFO`).
@@ -71,4 +88,5 @@ The server connects to the Unity Editor automatically when both are running. You
   * `--transport {stdio,http}` - Transport protocol (default: `stdio`).
   * `--http-host HOST` - Override HTTP bind host (e.g. `0.0.0.0`).
   * `--http-port PORT` - Override HTTP bind port (e.g. `8080`).
-  * `--http-remote-hosted` - Treat HTTP transport as remotely hosted (requires external API key validation).
+  * `--http-remote-hosted` - Treat HTTP transport as remotely hosted (requires
+    external API key validation).
