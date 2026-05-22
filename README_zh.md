@@ -7,7 +7,7 @@
 本仓库提供 GitHub Actions 工作流，用于自动获取、构建上游官方项目 [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) 的 Server 端镜像，并将其发布至 GitHub Container Registry (GHCR)。
 
 ### 🌟 关于上游官方项目
-[CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) (MCP for Unity) 是一个强大的连接桥梁。它基于 Model Context Protocol (MCP) 协议，将 AI 助手（如 Claude Desktop、Cursor、Claude Code、VS Code 等）直接与您的 Unity 编辑器连接起来。这使得大语言模型（LLM）获得了操作 Unity 资产、管理场景、编辑脚本以及自动化执行各类开发任务的能力。
+[CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) (MCP for Unity) 是一个强大的MCP工具。它基于 Model Context Protocol (MCP) 协议，将 AI 助手（如 Claude Desktop、Cursor、Claude Code、VS Code 等）直接与您的 Unity 编辑器连接起来。这使得大语言模型（LLM）获得了操作 Unity 资产、管理场景、编辑脚本以及自动化执行各类开发任务的能力。
 
 本仓库 (`unity-mcp-img`) 作为其配套的镜像自动同步构建库，将官方 Server 端的 HTTP/stdio 运行环境打包为轻量且高度优化的 Docker 容器镜像，极大地方便了在 NAS、本地服务器或云端等各类环境中的一键部署与运行。
 
